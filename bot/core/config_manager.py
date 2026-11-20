@@ -22,6 +22,7 @@ class Config:
     DATABASE_URL = ""
     DATABASE_NAME = "mltb"
     DEFAULT_UPLOAD = "rc"
+    LOCAL_PATH = ""
     EQUAL_SPLITS = False
     EXCLUDED_EXTENSIONS = ""
     INCLUDED_EXTENSIONS = ""
@@ -141,7 +142,7 @@ class Config:
         converted_value = cls._convert(attr, value)
         if isinstance(converted_value, str):
             converted_value = converted_value.strip()
-        if attr == "DEFAULT_UPLOAD" and converted_value not in {"gd", "bh", "gf"}:
+        if attr == "DEFAULT_UPLOAD" and converted_value not in {"gd", "bh", "gf", "lc"}:
             return "rc"
         if attr in {
             "BASE_URL",

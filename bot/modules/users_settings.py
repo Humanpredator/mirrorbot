@@ -46,7 +46,9 @@ leech_options = [
 ]
 rclone_options = ["RCLONE_CONFIG", "RCLONE_PATH", "RCLONE_FLAGS"]
 gdrive_options = ["TOKEN_PICKLE", "GDRIVE_ID", "INDEX_URL"]
-uploaders_options = ["BUZZHEAVIER_ACCOUNT_ID", "BUZZHEAVIER_FOLDER_ID"]
+uploaders_options = ["BUZZHEAVIER_ACCOUNT_ID", "BUZZHEAVIER_FOLDER_ID", "LOCAL_PATH"]
+upload_cycle = {"rc": "gd", "gd": "lc", "lc": "rc"}
+upload_names = {"rc": "Rclone", "gd": "Gdrive API", "lc": "Local"}
 
 
 async def get_user_settings(from_user, stype="main"):
@@ -277,6 +279,7 @@ Stop Duplicate is <b>{sd_msg}</b>"""
         buttons.data_button(
             "Buzzheavier Folder ID", f"userset {user_id} menu BUZZHEAVIER_FOLDER_ID"
         )
+        buttons.data_button("Local Path", f"userset {user_id} menu LOCAL_PATH")
         buttons.data_button("Back", f"userset {user_id} back")
         buttons.data_button("Close", f"userset {user_id} close")
         if user_dict.get("BUZZHEAVIER_ACCOUNT_ID", False):
@@ -287,9 +290,16 @@ Stop Duplicate is <b>{sd_msg}</b>"""
             bh_fol = user_dict["BUZZHEAVIER_FOLDER_ID"]
         else:
             bh_fol = "None"
+        if user_dict.get("LOCAL_PATH", False):
+            lc_path = user_dict["LOCAL_PATH"]
+        elif Config.LOCAL_PATH:
+            lc_path = Config.LOCAL_PATH
+        else:
+            lc_path = "None"
         text = f"""<u>Uploaders Settings for {name}</u>
 Buzzheavier Account ID: {bh_acc}
-Buzzheavier Folder ID: {bh_fol}"""
+Buzzheavier Folder ID: {bh_fol}
+Local Path: <code>{escape(lc_path)}</code>"""
     else:
         buttons.data_button("Leech", f"userset {user_id} leech")
         buttons.data_button("Rclone", f"userset {user_id} rclone")
@@ -308,8 +318,10 @@ Buzzheavier Folder ID: {bh_fol}"""
             default_upload = user_dict["DEFAULT_UPLOAD"]
         elif "DEFAULT_UPLOAD" not in user_dict:
             default_upload = Config.DEFAULT_UPLOAD
-        du = "Gdrive API" if default_upload == "gd" else "Rclone"
-        dur = "Gdrive API" if default_upload != "gd" else "Rclone"
+        if default_upload not in upload_cycle:
+            default_upload = "rc"
+        du = upload_names[default_upload]
+        dur = upload_names[upload_cycle[default_upload]]
         buttons.data_button(
             f"Upload using {dur}", f"userset {user_id} {default_upload}"
         )
@@ -790,9 +802,9 @@ async def edit_user_settings(client, query):
             with BytesIO(msg_ecd) as ofile:
                 ofile.name = "users_settings.txt"
                 await send_file(message, ofile)
-    elif data[2] in ["gd", "rc"]:
+    elif data[2] in upload_cycle:
         await query.answer()
-        du = "rc" if data[2] == "gd" else "gd"
+        du = upload_cycle[data[2]]
         update_user_ldata(user_id, "DEFAULT_UPLOAD", du)
         await update_user_settings(query)
         await database.update_user_data(user_id)

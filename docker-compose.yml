@@ -4,3 +4,7 @@ services:
     command: bash start.sh
     restart: on-failure
     network_mode: "host"
+    volumes:
+      # Host folder (left) where "lc" uploads land -> path inside the container (right).
+      # Change the left side to any folder on your server, e.g. /mnt/media:/data/media
+      - ./media:/data/media

@@ -104,6 +104,7 @@ class TaskConfig:
         self.is_torbox = False
         self.is_buzzheavier = False
         self.is_gofile = False
+        self.is_local = False
         self.equal_splits = False
         self.user_transmission = False
         self.hybrid_leech = False
@@ -180,6 +181,37 @@ class TaskConfig:
                 self.private_link = True
             if not await aiopath.exists(token_path):
                 raise ValueError(f"NO TOKEN! {token_path} not Exists!")
+
+    def resolve_local_path(self, dest):
+        base = Config.LOCAL_PATH.strip()
+        if dest.startswith("lc:"):
+            path = dest[3:].strip()
+        else:
+            path = (self.user_dict.get("LOCAL_PATH") or base).strip()
+        if not path:
+            raise ValueError(
+                "No local path! Set LOCAL_PATH in config/user settings or use -up lc:/path"
+            )
+        if base and not ospath.isabs(path):
+            path = ospath.join(base, path)
+        path = ospath.realpath(path)
+        if not ospath.isabs(path):
+            raise ValueError("Local path must be an absolute path!")
+        download_root = ospath.realpath(DOWNLOAD_DIR)
+        if path == download_root or path.startswith(download_root + ospath.sep):
+            raise ValueError("Local path can't be inside the download directory!")
+        is_privileged = self.user_id == Config.OWNER_ID or user_data.get(
+            self.user_id, {}
+        ).get("SUDO", False)
+        if not is_privileged:
+            if not base:
+                raise ValueError(
+                    "Only owner/sudo can use local upload when LOCAL_PATH isn't set in config!"
+                )
+            base_real = ospath.realpath(base)
+            if path != base_real and not path.startswith(base_real + ospath.sep):
+                raise ValueError(f"Local path must be inside {base}!")
+        return path
 
     async def before_start(self):
         self.name_sub = (
@@ -306,8 +338,22 @@ class TaskConfig:
             self.is_buzzheavier = True
         elif default_upload == "gf" or self.up_dest == "gf":
             self.is_gofile = True
+        elif not self.is_leech and (
+            (not self.up_dest and default_upload == "lc")
+            or self.up_dest == "lc"
+            or self.up_dest.startswith("lc:")
+        ):
+            if self.is_clone:
+                raise ValueError("Local destination is not supported for clone!")
+            self.up_dest = self.resolve_local_path(self.up_dest)
+            self.is_local = True
 
-        if not self.is_leech and not self.is_buzzheavier and not self.is_gofile:
+        if (
+            not self.is_leech
+            and not self.is_buzzheavier
+            and not self.is_gofile
+            and not self.is_local
+        ):
             self.stop_duplicate = (
                 self.user_dict.get("STOP_DUPLICATE")
                 or "STOP_DUPLICATE" not in self.user_dict
@@ -372,7 +418,7 @@ class TaskConfig:
                     self.link
                 ) != self.get_config_path(self.up_dest):
                     raise ValueError("You must use the same config to clone!")
-        elif not self.is_buzzheavier and not self.is_gofile:
+        elif not self.is_buzzheavier and not self.is_gofile and not self.is_local:
             self.up_dest = (
                 self.up_dest
                 or self.user_dict.get("LEECH_DUMP_CHAT")

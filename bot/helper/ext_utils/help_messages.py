@@ -96,13 +96,14 @@ Note: Only mb and gb are supported or write in bytes without unit!"""
 
 upload = """<b>Upload Destination</b>: -up
 
-/cmd link -up rc/gd/rcl/gdl/bh/gf (rcl: to select rclone config, remote & path | gdl: To select token.pickle, gdrive id | gf: upload to GoFile) using buttons
+/cmd link -up rc/gd/rcl/gdl/bh/gf/lc (rcl: to select rclone config, remote & path | gdl: To select token.pickle, gdrive id | gf: upload to GoFile | lc: move to LOCAL_PATH on the server) using buttons
 You can directly add the upload path: -up remote:dir/subdir or -up Gdrive_id or -up id/username (telegram) or -up id/username|topic_id (telegram)
 If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
 If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
 If DEFAULT_UPLOAD is `bh` or `gf` then you can pass up: `rc` to upload to RCLONE_PATH.
 If DEFAULT_UPLOAD is `gd` then you can pass up: `bh` to upload to BUZZHEAVIER or `gf` to upload to GoFile.
 GoFile uses GOFILE_API_KEY when configured; otherwise guest upload is used.
+Local: -up lc moves files to your LOCAL_PATH, or -up lc:/abs/path (relative paths are joined to the config LOCAL_PATH). Non-sudo users are limited to paths inside the config LOCAL_PATH.
 
 If you want to add path or gdrive manually from your config/token (UPLOADED FROM USETTING) add mt: for rclone and mt: before the path/gdrive_id without space.
 /cmd link -up mt:main:dump or -up mt:gdrive_id or -up mt:bh:folder_id <strong>OR you can simply edit upload using owner/user|token/config from usetting without adding mt: before the upload path/id</strong>
@@ -443,6 +444,7 @@ user_settings_text = {
     "RCLONE_FLAGS": "key:value|key|key|key:value . Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>\nEx: --buffer-size:8M|--drive-starred-only",
     "GDRIVE_ID": "Send Gdrive ID. If you want to use your token.pickle edit using owner/user token from usetting or add mt: before the id. Example: mt:F435RGGRDXXXXXX . Timeout: 60 sec",
     "INDEX_URL": "Send Index URL. Timeout: 60 sec",
+    "LOCAL_PATH": "Send local folder path on the server where finished files will be moved (used with -up lc or DEFAULT_UPLOAD lc). Example: /data/movies . Timeout: 60 sec",
     "UPLOAD_PATHS": "Send Dict of keys that have path values. Example: {'path 1': 'remote:rclonefolder', 'path 2': 'gdrive1 id', 'path 3': 'tg chat id', 'path 4': 'mt:remote:', 'path 5': b:@username} . Timeout: 60 sec",
     "EXCLUDED_EXTENSIONS": "Send excluded extensions separated by space without dot at beginning. Timeout: 60 sec",
     "INCLUDED_EXTENSIONS": "Send included extensions separated by space without dot at beginning. Timeout: 60 sec",
